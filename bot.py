@@ -4,8 +4,10 @@ import requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-TOKEN =("8656921886:AAGOdVdXeb8s0CMwacYY1PC7OK8ohMFhCo0")
+# 🔐 TOKEN (mejor desde variables de entorno)
+TOKEN = ("8656921886:AAGOdVdXeb8s0CMwacYY1PC7OK8ohMFhCo0")
 
+# ---------------- USERS ----------------
 users = {}
 
 def get_user(uid):
@@ -18,42 +20,45 @@ def get_user(uid):
         }
     return users[uid]
 
+# ---------------- PRICE ----------------
 def price(symbol):
     try:
-        return float(requests.get(
-            f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}"
-        ).json()["price"])
+        r = requests.get(
+            f"https://api.binance.com/api/v3/ticker/price?symbol={symbol}",
+            timeout=5
+        )
+        return float(r.json()["price"])
     except:
-        return 0
+        return 0.0
 
-# -------- START --------
+# ---------------- START ----------------
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     u = get_user(update.effective_user.id)
 
     await update.message.reply_text(f"""
-💎 Quantum Trade 
+💎 Quantum Trade
 
-💰 Balance: ${u['balance']}
+💰 Balance: ${u['balance']:.2f}
 📊 Nivel: {u['level']}
 
 Comandos:
-/panel /trade /market /ranking /dashboard
+/panel /trade /market /dashboard
 """)
 
-# -------- PANEL --------
+# ---------------- PANEL ----------------
 async def panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
     u = get_user(update.effective_user.id)
 
     await update.message.reply_text(f"""
 📊 DASHBOARD
 
-💰 Balance: ${u['balance']}
-📈 Profit: ${u['profit']}
+💰 Balance: ${u['balance']:.2f}
+📈 Profit: ${u['profit']:.2f}
 🏆 Nivel: {u['level']}
 👥 Referidos: {u['referrals']}
 """)
 
-# -------- TRADE --------
+# ---------------- TRADE ----------------
 async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE):
     u = get_user(update.effective_user.id)
 
@@ -67,25 +72,28 @@ async def trade(update: Update, context: ContextTypes.DEFAULT_TYPE):
         u["balance"] -= profit * 0.3
 
     await update.message.reply_text(
-        f"📈 {'WIN' if win else 'LOSS'} | ${profit}"
+        f"📈 {'WIN ✅' if win else 'LOSS ❌'} | ${profit}"
     )
 
-# -------- MARKET --------
+# ---------------- MARKET ----------------
 async def market(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    btc = price("BTCUSDT")
+    eth = price("ETHUSDT")
+
     await update.message.reply_text(f"""
 📊 MARKET LIVE
 
-₿ BTC: ${price("BTCUSDT")}
-Ξ ETH: ${price("ETHUSDT")}
+₿ BTC: ${btc:.2f}
+Ξ ETH: ${eth:.2f}
 """)
 
-# -------- DASHBOARD LINK --------
+# ---------------- DASHBOARD LINK ----------------
 async def dashboard(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
-        "🌐 Panel web:\nhttp://localhost:10000"
+        "🌐 Panel web:\nhttp://localhost:10000 (demo local)"
     )
 
-# -------- MAIN --------
+# ---------------- MAIN ----------------
 app = ApplicationBuilder().token(TOKEN).build()
 
 app.add_handler(CommandHandler("start", start))
@@ -95,4 +103,5 @@ app.add_handler(CommandHandler("market", market))
 app.add_handler(CommandHandler("dashboard", dashboard))
 
 print("🚀 Quantum Trade FULL activo")
-app.run_polling()
+
+app.run_polling(drop_pending_updates=True)
