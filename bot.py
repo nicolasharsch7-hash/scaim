@@ -4,7 +4,7 @@ import requests
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
 
-TOKEN = os.getenv("8656921886:AAGOdVdXeb8s0CMwacYY1PC7OK8ohMFhCo0")
+TOKEN =("8656921886:AAGOdVdXeb8s0CMwacYY1PC7OK8ohMFhCo0")
 
 users = {}
 
